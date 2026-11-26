@@ -91,6 +91,36 @@ def test_line_y_2d_x_1d_broadcasts(capture_send):
     assert "data" in sent["payload"]
 
 
+def test_line_y_1d_x_column_vector(capture_send):
+    """(N, 1) X column vector is raveled to 1D and matches 1D Y."""
+    Y = np.array([10.0, 20.0, 30.0])
+    X = np.array([[1.0], [2.0], [3.0]])
+    sent = capture_send(lambda v: v.line(Y, X=X))
+    assert len(sent["payload"]["data"]) == 1
+    assert sent["payload"]["data"][0]["x"] == [1.0, 2.0, 3.0]
+    assert sent["payload"]["data"][0]["y"] == [10.0, 20.0, 30.0]
+
+
+def test_line_y_2d_multi_x_column_vector_broadcasts(capture_send):
+    """(N, 1) X column vector is raveled to 1D and broadcast across 2D Y."""
+    Y = np.array([[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]])
+    X = np.array([[0.0], [1.0], [2.0]])
+    sent = capture_send(lambda v: v.line(Y, X=X))
+    assert len(sent["payload"]["data"]) == 2
+    assert sent["payload"]["data"][0]["x"] == [0.0, 1.0, 2.0]
+    assert sent["payload"]["data"][1]["x"] == [0.0, 1.0, 2.0]
+
+
+def test_line_3d_z_column_vector(capture_send):
+    """(N, 1) Z column vector is raveled to 1D and matches 1D Y and X."""
+    Y = np.array([1.0, 2.0, 3.0])
+    X = np.array([0.0, 1.0, 2.0])
+    Z = np.array([[5.0], [6.0], [7.0]])
+    sent = capture_send(lambda v: v.line(Y, X=X, Z=Z, is3d=True))
+    assert len(sent["payload"]["data"]) == 1
+    assert sent["payload"]["data"][0]["z"] == [5.0, 6.0, 7.0]
+
+
 def test_line_update_append_requires_x(offline_client):
     """update='append' without X raises before sending."""
     with pytest.raises(AssertionError):
